@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -45,44 +44,49 @@ func doScaffold(dir string, fw framework) error {
 	if _, err := os.Stat(dir); err == nil {
 		return fmt.Errorf(tr("folder_exists"), dir)
 	}
-	fmt.Printf("  %s %s...\n", fw.name, tr("creating"))
-	os.MkdirAll(dir, 0755)
 
-	var cmd *exec.Cmd
-	switch fw.typ {
-	case "composer":
-		if runtime.GOOS == "windows" {
-			cmd = exec.Command("cmd", "/c", "composer", "create-project", fw.pkg+":"+fw.ver, dir, "--no-interaction", "--prefer-dist")
-		} else {
-			cmd = exec.Command("composer", "create-project", fw.pkg+":"+fw.ver, dir, "--no-interaction", "--prefer-dist")
-		}
-	case "npm":
-		switch fw.pkg {
-		case "create-vite":
-			if fw.tmpl != "" {
-				cmd = exec.Command("npx", "create-vite@latest", dir, "--template", fw.tmpl)
-			} else {
-				cmd = exec.Command("npx", "create-vite@latest", dir)
-			}
-		case "create-next-app":
-			cmd = exec.Command("npx", "create-next-app@latest", dir)
-		case "create-adonisjs":
-			cmd = exec.Command("npm", "init", "adonisjs@latest", dir)
-		}
-	}
-
-	if cmd == nil {
+	exe, args := scaffoldCmd(dir, fw)
+	if exe == "" {
 		return fmt.Errorf("unsupported project type: %s", fw.typ)
 	}
 
+	if _, err := exec.LookPath(exe); err != nil {
+		return fmt.Errorf("'%s' not found in PATH — install it first", exe)
+	}
+
+	fmt.Printf("  %s %s...\n", fw.name, tr("creating"))
+	os.MkdirAll(dir, 0755)
+
+	cmd := exec.Command(exe, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
+		os.RemoveAll(dir)
 		return fmt.Errorf("scaffold failed: %w", err)
 	}
 
 	fmt.Println("  " + trFmt("project_created", filepath.Base(dir)))
 	return nil
+}
+
+func scaffoldCmd(dir string, fw framework) (string, []string) {
+	switch fw.typ {
+	case "composer":
+		return "composer", []string{"create-project", fw.pkg + ":" + fw.ver, dir, "--no-interaction", "--prefer-dist"}
+	case "npm":
+		switch fw.pkg {
+		case "create-vite":
+			if fw.tmpl != "" {
+				return "npx", []string{"create-vite@latest", dir, "--template", fw.tmpl}
+			}
+			return "npx", []string{"create-vite@latest", dir}
+		case "create-next-app":
+			return "npx", []string{"create-next-app@latest", dir}
+		case "create-adonisjs":
+			return "npm", []string{"init", "adonisjs@latest", dir}
+		}
+	}
+	return "", nil
 }
 
 func createProject() {
