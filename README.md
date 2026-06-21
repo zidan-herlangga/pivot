@@ -1,23 +1,20 @@
 # pivot
 
-> Switch Python, PHP, Node.js, and Go versions on the fly.
+> Multi-runtime version switcher — Python, PHP, Node.js, Go, Deno, Bun, Java, Rust.
 
 ## Install
 
 **Linux / macOS**
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/zidan-herlangga/pivot/main/scripts/install.sh | sh
 ```
 
 **Windows (PowerShell)**
-
 ```powershell
-iwr -Uri https://raw.githubusercontent.com/zidan-herlangga/pivot/main/scripts/install.ps1 | iex
+iwr -UseBasicParsing -Uri https://raw.githubusercontent.com/zidan-herlangga/pivot/main/scripts/install.ps1 | iex
 ```
 
 **Manual (Go required)**
-
 ```bash
 go install github.com/zidan-herlangga/pivot@latest
 ```
@@ -25,34 +22,83 @@ go install github.com/zidan-herlangga/pivot@latest
 ## Quick Start
 
 ```bash
-pivot                       # Interactive menu
-pivot use node 22           # Switch Node.js to v22
-pivot install python        # Download latest Python
-pivot list                  # Show all available versions
-pivot env                   # Print PATH setup for your shell
+pivot                # Interactive TUI menu
+pivot use node 22    # Switch Node.js to v22
+pivot list           # Show all available versions
+pivot run python 3 --version
+pivot doctor --fix   # Auto-diagnose and fix PATH issues
 ```
 
-Add `~/.pivot/bin` to your PATH, then run `pivot use <runtime> <version>` to switch anytime.
+Add `~/.pivot/bin` to your PATH once, then `pivot use` handles the rest.
 
 ## Commands
 
-| Command                    | Description                       |
-| -------------------------- | --------------------------------- |
-| `pivot`                    | Interactive TUI menu              |
-| `pivot list`               | Show installed versions           |
-| `pivot use <rt> <ver>`     | Activate a version                |
-| `pivot install <rt> [ver]` | Download a portable runtime       |
-| `pivot run <rt> <ver> <cmd>` | Run a command with a version    |
-| `pivot doctor`             | Diagnose system and PATH          |
-| `pivot upgrade`            | Upgrade pivot to latest version   |
-| `pivot clean`              | Remove unused runtime versions    |
-| `pivot update`             | Check latest upstream versions    |
-| `pivot init`               | Create `.pivotrc` in current dir  |
-| `pivot env`                | Print PATH setup for shell config |
+| Command | Description |
+|---|---|
+| `pivot` | Interactive TUI menu |
+| `pivot list` | List all installed versions |
+| `pivot use <rt> <ver>` | Activate a runtime version |
+| `pivot install <rt> [ver]` | Download a portable runtime |
+| `pivot run <rt> <ver> <cmd>` | Run a command with specific version |
+| `pivot shell <rt> <ver>` | Spawn a subshell with specific version |
+| `pivot doctor [--fix]` | Diagnose system & auto-fix PATH |
+| `pivot clean` | Remove unused runtime versions |
+| `pivot upgrade` | Self-update to latest pivot |
+| `pivot update` | Check latest upstream versions |
+| `pivot init` / `pin` | Create `.pivotrc` in current dir |
+| `pivot env` | Print PATH export for shell config |
+| `pivot hook` | Print shell hook for auto-apply |
+| `pivot completion bash\|zsh\|fish` | Generate tab completion |
 
-Version aliases: `latest`, `system`, `lts` (e.g. `pivot use node lts`).
+**Version aliases:** `latest`, `system`, `lts` — e.g. `pivot use node lts`.
 
-### Project Scaffolding
+## Supported Runtimes
+
+| Runtime | Detection | Portable Download |
+|---|---|---|
+| **Python** | System + Portable | Windows / Linux / macOS |
+| **PHP** | System + Portable | Windows |
+| **Node.js** | System + Portable | Windows / Linux / macOS |
+| **Go** | System + Portable | Windows / Linux / macOS |
+| **Deno** | System | — |
+| **Bun** | System | — |
+| **Java** | System | — |
+| **Rust** | System | — |
+
+## Run with Specific Version
+
+Run any command without switching your active version:
+
+```bash
+pivot run python 3.12 my_script.py
+pivot run node 22 npm test
+pivot run go 1.26 go build .
+```
+
+Shortcut for version flags:
+
+```bash
+pivot run node 22 --version   # same as: node --version
+```
+
+## Shell Hook
+
+Auto-apply `.pivotrc` whenever you `cd` into a directory.
+
+```bash
+eval "$(pivot hook)"        # bash/zsh
+pivot hook | source         # fish
+```
+
+## Tab Completion
+
+```bash
+eval "$(pivot completion bash)"   # bash
+eval "$(pivot completion zsh)"    # zsh
+pivot completion fish >> ~/.config/fish/config.fish  # fish
+```
+
+## Project Scaffolding
 
 ```bash
 pivot create laravel myapp
@@ -62,35 +108,37 @@ pivot create nextjs myapp
 
 Supported: Laravel, CodeIgniter 4, Symfony, WordPress (Bedrock), React, Next.js, Vue, AdonisJS.
 
-### Profiles
+## Profiles
+
+Save and restore your runtime configurations:
 
 ```bash
-pivot profile save backend     # Save current versions
-pivot profile load backend     # Restore saved versions
-pivot profile list             # List all profiles
-pivot profile delete backend   # Delete a profile
+pivot profile save backend
+pivot profile load backend
+pivot profile list
+pivot profile delete backend
 ```
 
 ## .pivotrc
 
-Place a `.pivotrc` file in any directory to auto-apply runtimes when you `cd` into it:
+Place `.pivotrc` in any project directory:
 
 ```ini
 python=3.12.0
 node=22.0.0
 ```
 
-pivot walks up the directory tree and picks the nearest `.pivotrc`.
+pivot walks up the directory tree and auto-applies the nearest `.pivotrc` — no manual switching.
 
 ## Language
 
-pivot automatically detects your system language — **English** and **Bahasa Indonesia** are supported.
+Auto-detects your system language — **English** and **Bahasa Indonesia** supported.
 
 ## Directory Structure
 
 ```
 ~/.pivot/
-├── bin/            # Symlinks to active runtime binaries (add to PATH)
+├── bin/            # Active runtime binary symlinks (add this to PATH)
 ├── runtimes/       # Downloaded portable runtimes
 ├── profiles/       # Saved version profiles
 ├── config.json     # Current active versions
