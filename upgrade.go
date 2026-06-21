@@ -28,7 +28,7 @@ func cmdUpgrade() {
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Get("https://api.github.com/repos/zidan-herlangga/pivot/releases/latest")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_fetch_failed"))
+		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_fetch_failed")+": "+err.Error())
 		return
 	}
 	defer resp.Body.Close()
@@ -88,17 +88,31 @@ func cmdUpgrade() {
 	req.Header.Set("Accept", "application/octet-stream")
 	resp2, err := client.Do(req)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_download_failed"))
+		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_download_failed")+": "+err.Error())
 		return
 	}
 	defer resp2.Body.Close()
 
-	out, _ := os.Create(archivePath)
-	io.Copy(out, resp2.Body)
+	if resp2.StatusCode != 200 {
+		msg, _ := io.ReadAll(resp2.Body)
+		fmt.Fprintf(os.Stderr, "  "+tr("upgrade_download_failed")+": HTTP %d\n  %s\n", resp2.StatusCode, string(msg))
+		return
+	}
+
+	out, err := os.Create(archivePath)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed")+": create temp: "+err.Error())
+		return
+	}
+	_, err = io.Copy(out, resp2.Body)
 	out.Close()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed")+": download: "+err.Error())
+		return
+	}
 
 	if err := extractArchive(archivePath, tmpDir); err != nil {
-		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_extract_failed"))
+		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_extract_failed")+": "+err.Error())
 		return
 	}
 
@@ -106,42 +120,47 @@ func cmdUpgrade() {
 	newBinary := filepath.Join(tmpDir, exeName)
 	if _, err := os.Stat(newBinary); err != nil {
 		entries, _ := os.ReadDir(tmpDir)
+		found := false
 		for _, e := range entries {
 			if e.IsDir() {
 				candidate := filepath.Join(tmpDir, e.Name(), exeName)
 				if _, err2 := os.Stat(candidate); err2 == nil {
 					newBinary = candidate
+					found = true
 					break
 				}
 			}
+		}
+		if !found {
+			fmt.Fprintf(os.Stderr, "  "+tr("upgrade_failed")+": binary not found in archive\n")
+			return
 		}
 	}
 
 	self, err := os.Executable()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed"))
+		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed")+": self: "+err.Error())
 		return
 	}
 
 	data, err := os.ReadFile(newBinary)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed"))
+		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed")+": read: "+err.Error())
 		return
 	}
 
-	// On Windows, rename the running exe first, then write new one
 	if runtime.GOOS == "windows" {
 		old := self + ".old"
 		os.Remove(old)
 		if err := os.Rename(self, old); err != nil {
-			fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed"))
+			fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed")+": rename: "+err.Error())
 			return
 		}
 		defer os.Remove(old)
 	}
 
 	if err := os.WriteFile(self, data, 0755); err != nil {
-		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed"))
+		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed")+": write: "+err.Error())
 		return
 	}
 
