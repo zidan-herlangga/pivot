@@ -20,7 +20,14 @@ func cmdHook() {
 	case strings.Contains(name, "fish"):
 		fmt.Print(`function __pivot_cd_hook --on-variable PWD
   if status --is-interactive
-    pivot init --silent 2>/dev/null
+    if test -f .pivotrc
+      while read -lat line
+        set -l parts (string split "=" -- $line)
+        test -z "$parts[1]"; and continue
+        string match -q "#*" "$parts[1]"; and continue
+        pivot use $parts[1] $parts[2] 2>/dev/null
+      end < .pivotrc
+    end
   end
 end
 `)

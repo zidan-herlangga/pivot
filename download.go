@@ -49,8 +49,7 @@ func downloadRuntime(key, version string) error {
 
 func fixExtractedLayout(key, dest string) {
 	switch key {
-	case "java", "deno":
-		// If dest contains a single subdirectory, move contents up
+	case "java", "deno", "go":
 		entries, _ := os.ReadDir(dest)
 		if len(entries) == 1 && entries[0].IsDir() {
 			sub := filepath.Join(dest, entries[0].Name())
@@ -78,19 +77,19 @@ func copyDirContents(src, dest string) {
 func defaultVersion(key string) string {
 	switch key {
 	case "python":
-		return "3.14.6"
+		return "3.12.4"
 	case "php":
-		return "8.5.7"
+		return "8.3.8"
 	case "node":
-		return "24.17.0"
+		return "20.15.0"
 	case "go":
-		return "1.26.4"
+		return "1.22.5"
 	case "java":
-		return "21.0.2"
+		return "21"
 	case "deno":
-		return "2.2.11"
+		return "1.44.4"
 	case "bun":
-		return "1.2.8"
+		return "1.1.17"
 	}
 	return ""
 }

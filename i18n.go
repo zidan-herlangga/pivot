@@ -124,17 +124,19 @@ var i18n = map[string][2]string{
 	"doctor_path_ok":      {"%s is in PATH", "%s ada di PATH"},
 	"doctor_path_missing": {"%s is NOT in PATH — add it with: pivot env", "%s TIDAK ada di PATH — tambahkan dengan: pivot env"},
 	"doctor_no_versions":  {"No %s versions found", "Tidak ada versi %s ditemukan"},
-	"doctor_conflict":     {"Multiple system %s detected —可能會导致冲突", "Multiple system %s terdeteksi — mungkin konflik"},
+	"doctor_conflict":     {"Multiple system %s detected — may cause conflicts", "Multiple system %s terdeteksi — mungkin konflik"},
 	"doctor_bin_missing":  {"%s binary not found at %s — re-run: pivot use", "Binary %s tidak ditemukan di %s — jalankan ulang: pivot use"},
 	"doctor_active_missing": {"%s %s is active but version not found", "%s %s aktif tetapi versi tidak ditemukan"},
 	"doctor_not_active":   {"No active %s version — run: pivot use", "Tidak ada versi %s aktif — jalankan: pivot use"},
 	"doctor_no_goroot":    {"GOROOT not set — Go may not work correctly", "GOROOT tidak diatur — Go mungkin tidak berfungsi dengan benar"},
+	"doctor_no_javahome":  {"JAVA_HOME not set — Java may not work correctly", "JAVA_HOME tidak diatur — Java mungkin tidak berfungsi dengan benar"},
 	"doctor_all_good":     {"All checks passed!", "Semua pemeriksaan berhasil!"},
 	"doctor_issues_found": {"Issues found — see above.", "Masalah ditemukan — lihat di atas."},
 
 	// Interactive
 	"install_runtime":  {"Install Runtime", "Pasang Runtime"},
 	"version_for":      {"Version for %s (empty = default)", "Versi untuk %s (kosong = bawaan)"},
+	"rust_install_hint": {"Rust is installed via rustup — visit https://rustup.rs", "Rust dipasang via rustup — kunjungi https://rustup.rs"},
 
 	// Help text
 	"commands":           {"Commands", "Perintah"},
@@ -184,4 +186,6 @@ var i18n = map[string][2]string{
 	"bun_label":          {"Bun     [%s]", "Bun     [%s]"},
 	"java_label":         {"Java    [%s]", "Java    [%s]"},
 	"rust_label":         {"Rust    [%s]", "Rust    [%s]"},
+
+	"report_bugs":        {"Report bugs: https://github.com/zidan-herlangga/pivot/issues", "Lapor bug: https://github.com/zidan-herlangga/pivot/issues"},
 }

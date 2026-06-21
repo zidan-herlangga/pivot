@@ -90,15 +90,6 @@ func runtimeLabel(key string) string {
 func listVersions(key string) []versionInfo {
 	dir := filepath.Join(svDir, "runtimes", key)
 	versions := detectPortable(dir, key, exeName(key))
-	// Check nested bin/ directory for Go
-	if key == "go" {
-		for _, e := range listDir(dir) {
-			binPath := filepath.Join(dir, e, "bin", "go"+exeSuffix())
-			if _, err := os.Stat(binPath); err == nil {
-				versions = append(versions, versionInfo{version: e, source: "Portable", path: filepath.Dir(binPath)})
-			}
-		}
-	}
 	if sys := detectSystem(key); sys != nil {
 		versions = append(versions, *sys)
 	}
@@ -144,6 +135,7 @@ func detectPortable(dir, key, exe string) []versionInfo {
 	if err != nil {
 		return versions
 	}
+	seen := map[string]bool{}
 	for _, e := range entries {
 		if !e.IsDir() {
 			continue
@@ -151,18 +143,14 @@ func detectPortable(dir, key, exe string) []versionInfo {
 		exePath := filepath.Join(dir, e.Name(), exe)
 		if _, err := os.Stat(exePath); err == nil {
 			versions = append(versions, versionInfo{version: e.Name(), source: "Portable", path: filepath.Dir(exePath)})
+			seen[e.Name()] = true
+			continue
 		}
-	}
-	// Also check nested bin/ for Go (go installs to bin/go.exe)
-	if key == "go" {
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
-			}
-			binPath := filepath.Join(dir, e.Name(), "bin", "go"+exeSuffix())
-			if _, err := os.Stat(binPath); err == nil {
-				versions = append(versions, versionInfo{version: e.Name(), source: "Portable", path: filepath.Dir(binPath)})
-			}
+		// Check nested bin/ (e.g. Go, Java, any runtime where binary is in bin/)
+		binPath := filepath.Join(dir, e.Name(), "bin", exe)
+		if _, err := os.Stat(binPath); err == nil && !seen[e.Name()] {
+			versions = append(versions, versionInfo{version: e.Name(), source: "Portable", path: filepath.Dir(binPath)})
+			seen[e.Name()] = true
 		}
 	}
 	return versions
@@ -406,6 +394,10 @@ type profileData struct {
 	PHP    string `json:"php"`
 	Node   string `json:"node"`
 	Go     string `json:"go"`
+	Deno   string `json:"deno,omitempty"`
+	Bun    string `json:"bun,omitempty"`
+	Java   string `json:"java,omitempty"`
+	Rust   string `json:"rust,omitempty"`
 }
 
 func profileDir() string {
@@ -418,6 +410,10 @@ func saveProfile(name string) {
 		PHP:    cfg.PHP,
 		Node:   cfg.Node,
 		Go:     cfg.Go,
+		Deno:   cfg.Deno,
+		Bun:    cfg.Bun,
+		Java:   cfg.Java,
+		Rust:   cfg.Rust,
 	}
 	os.MkdirAll(profileDir(), 0755)
 	data, _ := json.MarshalIndent(p, "", "  ")
@@ -444,6 +440,18 @@ func loadProfile(name string) {
 	}
 	if p.Go != "" {
 		cfg.Go = p.Go
+	}
+	if p.Deno != "" {
+		cfg.Deno = p.Deno
+	}
+	if p.Bun != "" {
+		cfg.Bun = p.Bun
+	}
+	if p.Java != "" {
+		cfg.Java = p.Java
+	}
+	if p.Rust != "" {
+		cfg.Rust = p.Rust
 	}
 	saveConfig()
 	fmt.Println("  " + trFmt("profile_loaded", name))

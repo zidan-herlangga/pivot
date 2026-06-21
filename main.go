@@ -22,6 +22,7 @@ func main() {
 	args := os.Args[1:]
 	if len(args) == 0 {
 		runInteractive()
+		fmt.Println("  " + tr("report_bugs"))
 		return
 	}
 
@@ -82,6 +83,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  clean             %s\n", tr("clean_runtimes"))
 		fmt.Fprintf(os.Stderr, "  update            %s\n", tr("check_new_versions"))
 		fmt.Fprintf(os.Stderr, "  env               %s\n", tr("print_path_setup"))
+		fmt.Fprintf(os.Stderr, "\n  "+tr("report_bugs")+"\n")
 		os.Exit(1)
 	}
 }
@@ -107,21 +109,21 @@ func checkAutoApply() {
 			for _, line := range parseEnvLines(string(data)) {
 				switch line.key {
 				case "python":
-					if cfg.Python == "" { cfg.Python = line.val }
+					cfg.Python = line.val
 				case "php":
-					if cfg.PHP == "" { cfg.PHP = line.val }
+					cfg.PHP = line.val
 				case "node":
-					if cfg.Node == "" { cfg.Node = line.val }
+					cfg.Node = line.val
 				case "go":
-					if cfg.Go == "" { cfg.Go = line.val }
+					cfg.Go = line.val
 				case "deno":
-					if cfg.Deno == "" { cfg.Deno = line.val }
+					cfg.Deno = line.val
 				case "bun":
-					if cfg.Bun == "" { cfg.Bun = line.val }
+					cfg.Bun = line.val
 				case "java":
-					if cfg.Java == "" { cfg.Java = line.val }
+					cfg.Java = line.val
 				case "rust":
-					if cfg.Rust == "" { cfg.Rust = line.val }
+					cfg.Rust = line.val
 				}
 			}
 			return
@@ -201,13 +203,18 @@ func runInteractive() {
 
 func installRuntimeMenu() {
 	items := []string{
-		"Python", "PHP", "Node.js", "Go", "Java", "Deno", "Bun",
+		"Python", "PHP", "Node.js", "Go", "Java", "Deno", "Bun", "Rust",
 	}
 	sel := menu(tr("install_runtime"), items)
 	if sel < 0 {
 		return
 	}
-	rt := []string{"python", "php", "node", "go", "java", "deno", "bun"}[sel]
+	rt := []string{"python", "php", "node", "go", "java", "deno", "bun", "rust"}[sel]
+	if rt == "rust" {
+		fmt.Println("  " + tr("rust_install_hint"))
+		pause()
+		return
+	}
 	ver := input(trFmt("version_for", runtimeLabel(rt)))
 	if ver == "" {
 		ver = defaultVersion(rt)
@@ -269,6 +276,10 @@ func cmdInstall(args []string) {
 	ver := ""
 	if len(args) > 1 {
 		ver = args[1]
+	}
+	if args[0] == "rust" {
+		fmt.Println("  " + tr("rust_install_hint"))
+		return
 	}
 	if err := downloadRuntime(args[0], ver); err != nil {
 		fmt.Fprintf(os.Stderr, tr("install_failed"), err)

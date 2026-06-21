@@ -10,24 +10,14 @@ func cmdClean() {
 	dir := filepath.Join(svDir, "runtimes")
 	total := 0
 
-	for _, rt := range []string{"python", "php", "node", "go"} {
+	for _, rt := range allRuntimes() {
 		rtDir := filepath.Join(dir, rt)
 		entries, err := os.ReadDir(rtDir)
 		if err != nil {
 			continue
 		}
 
-		var active string
-		switch rt {
-		case "python":
-			active = cfg.Python
-		case "php":
-			active = cfg.PHP
-		case "node":
-			active = cfg.Node
-		case "go":
-			active = cfg.Go
-		}
+		active := activeVersion(rt)
 
 		for _, e := range entries {
 			if !e.IsDir() {

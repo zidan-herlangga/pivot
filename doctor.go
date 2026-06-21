@@ -102,7 +102,7 @@ func cmdDoctor() {
 	if cfg.Java != "" {
 		javaHome := os.Getenv("JAVA_HOME")
 		if javaHome == "" {
-			fmt.Printf("  \u26a0 JAVA_HOME not set — Java may not work correctly\n")
+			fmt.Printf("  \u26a0 %s\n", tr("doctor_no_javahome"))
 		}
 	}
 
