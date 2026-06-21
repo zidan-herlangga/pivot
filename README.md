@@ -154,6 +154,34 @@ go mod tidy
 go build -o pivot .
 ```
 
+## Uninstall & Update
+
+**Update**
+```bash
+pivot upgrade
+```
+
+**Uninstall**
+
+Remove the binary, data directory, and PATH entry:
+
+```bash
+# Linux / macOS
+rm -rf ~/.pivot
+sed -i '/\.pivot\/bin/d' ~/.bashrc ~/.zshrc 2>/dev/null
+```
+
+```powershell
+# Windows
+Remove-Item -Recurse -Force "$env:USERPROFILE\.pivot"
+```
+
+If installed via `go install`, also run:
+```bash
+rm "$(go env GOPATH)/bin/pivot"         # Linux/macOS
+del /f "%GOPATH%\bin\pivot.exe"          # Windows
+```
+
 ## MIT License
 
 Copyright (c) 2026 zidan-herlangga
