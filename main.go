@@ -107,21 +107,21 @@ func checkAutoApply() {
 			for _, line := range parseEnvLines(string(data)) {
 				switch line.key {
 				case "python":
-					if cfg.Python == "" {
-						cfg.Python = line.val
-					}
+					if cfg.Python == "" { cfg.Python = line.val }
 				case "php":
-					if cfg.PHP == "" {
-						cfg.PHP = line.val
-					}
+					if cfg.PHP == "" { cfg.PHP = line.val }
 				case "node":
-					if cfg.Node == "" {
-						cfg.Node = line.val
-					}
+					if cfg.Node == "" { cfg.Node = line.val }
 				case "go":
-					if cfg.Go == "" {
-						cfg.Go = line.val
-					}
+					if cfg.Go == "" { cfg.Go = line.val }
+				case "deno":
+					if cfg.Deno == "" { cfg.Deno = line.val }
+				case "bun":
+					if cfg.Bun == "" { cfg.Bun = line.val }
+				case "java":
+					if cfg.Java == "" { cfg.Java = line.val }
+				case "rust":
+					if cfg.Rust == "" { cfg.Rust = line.val }
 				}
 			}
 			return
@@ -159,36 +159,28 @@ func allRuntimes() []string {
 }
 
 func runInteractive() {
-	all := allRuntimes()
 	for {
 		items := []string{
 			trFmt("python_label", orDash(activePython())),
 			trFmt("php_label", orDash(activePHP())),
 			trFmt("nodejs_label", orDash(activeNode())),
 			trFmt("go_label", orDash(activeGo())),
-			trFmt("deno_label", orDash(cfg.Deno)),
-			trFmt("bun_label", orDash(cfg.Bun)),
-			trFmt("java_label", orDash(cfg.Java)),
-			trFmt("rust_label", orDash(cfg.Rust)),
+			trFmt("deno_label", orDash(activeDeno())),
+			trFmt("bun_label", orDash(activeBun())),
+			trFmt("java_label", orDash(activeJava())),
+			trFmt("rust_label", orDash(activeRust())),
 			tr("create_project"),
 			tr("profiles"),
 			tr("check_updates"),
+			tr("install_runtime"),
 			tr("exit"),
 		}
 		sel := menu(tr("version_switcher"), items)
 		if sel < 0 {
 			break
 		}
-		if sel < 4 {
-			selectVersion(all[sel])
-		} else if sel < 8 {
-			if v := detectExtra(all[sel]); v != nil {
-				activateVersion(all[sel], *v)
-				pause()
-			} else {
-				fmt.Println("\n  " + trFmt("doctor_no_versions", runtimeLabel(all[sel])))
-				pause()
-			}
+		if sel < 8 {
+			selectVersion(allRuntimes()[sel])
 		} else {
 			switch sel {
 			case 8:
@@ -199,10 +191,31 @@ func runInteractive() {
 				checkUpdates(svDir)
 				pause()
 			case 11:
+				installRuntimeMenu()
+			case 12:
 				return
 			}
 		}
 	}
+}
+
+func installRuntimeMenu() {
+	items := []string{
+		"Python", "PHP", "Node.js", "Go", "Java", "Deno", "Bun",
+	}
+	sel := menu(tr("install_runtime"), items)
+	if sel < 0 {
+		return
+	}
+	rt := []string{"python", "php", "node", "go", "java", "deno", "bun"}[sel]
+	ver := input(trFmt("version_for", runtimeLabel(rt)))
+	if ver == "" {
+		ver = defaultVersion(rt)
+	}
+	if err := downloadRuntime(rt, ver); err != nil {
+		fmt.Fprintf(os.Stderr, tr("install_failed"), err)
+	}
+	pause()
 }
 
 func orDash(s string) string {
@@ -236,7 +249,7 @@ func cmdUse(args []string) {
 		os.Exit(1)
 	}
 	if !isValidRuntime(args[0]) {
-		fmt.Fprintf(os.Stderr, tr("unknown_runtime"), args[0])
+		fmt.Fprintf(os.Stderr, tr("unknown_runtime")+"\n"+tr("valid_runtimes")+"\n", args[0])
 		os.Exit(1)
 	}
 	vs := listVersions(args[0])

@@ -88,23 +88,17 @@ func runtimeLabel(key string) string {
 
 // ---- Detection ----
 func listVersions(key string) []versionInfo {
-	isExtra := false
-	for _, e := range extraRuntimes {
-		if key == e {
-			isExtra = true
-			break
-		}
-	}
-	if isExtra {
-		versions := listExtraVersions(key)
-		sort.Slice(versions, func(i, j int) bool {
-			return compareVersions(versions[i].version, versions[j].version) > 0
-		})
-		return versions
-	}
-
 	dir := filepath.Join(svDir, "runtimes", key)
 	versions := detectPortable(dir, key, exeName(key))
+	// Check nested bin/ directory for Go
+	if key == "go" {
+		for _, e := range listDir(dir) {
+			binPath := filepath.Join(dir, e, "bin", "go"+exeSuffix())
+			if _, err := os.Stat(binPath); err == nil {
+				versions = append(versions, versionInfo{version: e, source: "Portable", path: filepath.Dir(binPath)})
+			}
+		}
+	}
 	if sys := detectSystem(key); sys != nil {
 		versions = append(versions, *sys)
 	}
@@ -112,6 +106,20 @@ func listVersions(key string) []versionInfo {
 		return compareVersions(versions[i].version, versions[j].version) > 0
 	})
 	return versions
+}
+
+func listDir(dir string) []string {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var names []string
+	for _, e := range entries {
+		if e.IsDir() {
+			names = append(names, e.Name())
+		}
+	}
+	return names
 }
 
 func exeName(key string) string {
@@ -263,6 +271,14 @@ func activateVersion(key string, v versionInfo) {
 		cfg.Node = v.version
 	case "go":
 		cfg.Go = v.version
+	case "deno":
+		cfg.Deno = v.version
+	case "bun":
+		cfg.Bun = v.version
+	case "java":
+		cfg.Java = v.version
+	case "rust":
+		cfg.Rust = v.version
 	}
 	saveConfig()
 	os.Setenv("SV_"+strings.ToUpper(key), v.version)
@@ -498,18 +514,14 @@ func cmdInit() {
 		return
 	}
 	content := "# pivot runtime config\n"
-	if cfg.Python != "" {
-		content += "python=" + cfg.Python + "\n"
-	}
-	if cfg.PHP != "" {
-		content += "php=" + cfg.PHP + "\n"
-	}
-	if cfg.Node != "" {
-		content += "node=" + cfg.Node + "\n"
-	}
-	if cfg.Go != "" {
-		content += "go=" + cfg.Go + "\n"
-	}
+	if cfg.Python != "" { content += "python=" + cfg.Python + "\n" }
+	if cfg.PHP != ""    { content += "php=" + cfg.PHP + "\n" }
+	if cfg.Node != ""   { content += "node=" + cfg.Node + "\n" }
+	if cfg.Go != ""     { content += "go=" + cfg.Go + "\n" }
+	if cfg.Deno != ""   { content += "deno=" + cfg.Deno + "\n" }
+	if cfg.Bun != ""    { content += "bun=" + cfg.Bun + "\n" }
+	if cfg.Java != ""   { content += "java=" + cfg.Java + "\n" }
+	if cfg.Rust != ""   { content += "rust=" + cfg.Rust + "\n" }
 	os.WriteFile(rcPath, []byte(content), 0644)
 	fmt.Println("  " + trFmt("pivotrc_created", cwd))
 }

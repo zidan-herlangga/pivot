@@ -3,10 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"time"
 )
 
@@ -51,7 +49,7 @@ func saveUpdateCache(path string, versions map[string]string) {
 
 func printUpdateVersions(versions map[string]string) {
 	fmt.Println("\n  " + tr("latest_versions"))
-	for _, name := range []string{"python", "php", "node", "go"} {
+	for _, name := range []string{"python", "php", "node", "go", "java", "deno", "bun"} {
 		if v, ok := versions[name]; ok {
 			fmt.Printf("    %s: %s\n", name, v)
 		}
@@ -63,7 +61,7 @@ func fetchLatestVersions() map[string]string {
 		key string
 		val string
 	}
-	ch := make(chan result, 4)
+	ch := make(chan result, 7)
 
 	fetch := func(url, pattern, key string) {
 		v := scrapeVersion(url, pattern)
@@ -74,33 +72,16 @@ func fetchLatestVersions() map[string]string {
 	go fetch("https://windows.php.net/download/", `php-(\d+\.\d+\.\d+)-nts`, "php")
 	go fetch("https://nodejs.org/dist/latest/", `node-v(\d+\.\d+\.\d+)`, "node")
 	go fetch("https://go.dev/dl/", `go(\d+\.\d+\.\d+)\.windows`, "go")
+	go fetch("https://github.com/adoptium/temurin21-binaries/releases", `jdk-(\d+\.\d+\.\d+\+\d+)`, "java")
+	go fetch("https://github.com/denoland/deno/releases/latest", `deno\s+v?(\d+\.\d+\.\d+)`, "deno")
+	go fetch("https://github.com/oven-sh/bun/releases/latest", `bun-v?(\d+\.\d+\.\d+)`, "bun")
 
-	m := make(map[string]string, 4)
-	for i := 0; i < 4; i++ {
+	m := make(map[string]string, 7)
+	for i := 0; i < 7; i++ {
 		r := <-ch
 		if r.val != "" {
 			m[r.key] = r.val
 		}
 	}
 	return m
-}
-
-func scrapeVersion(url, pattern string) string {
-	client := &http.Client{Timeout: 15 * time.Second}
-	resp, err := client.Get(url)
-	if err != nil {
-		return ""
-	}
-	defer resp.Body.Close()
-
-	body := make([]byte, 512*1024)
-	n, _ := resp.Body.Read(body)
-	content := string(body[:n])
-
-	re := regexp.MustCompile(pattern)
-	m := re.FindStringSubmatch(content)
-	if len(m) > 1 {
-		return m[1]
-	}
-	return ""
 }

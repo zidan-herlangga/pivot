@@ -61,7 +61,8 @@ var i18n = map[string][2]string{
 	"usage_create":      {"Usage: pivot create <framework> <name>", "Penggunaan: pivot create <framework> <nama>"},
 	"usage_profile":     {"Usage: pivot profile save|load|list|delete <name>", "Penggunaan: pivot profile simpan|muat|daftar|hapus <nama>"},
 	"version_not_found": {"Version '%s' not found for %s", "Versi '%s' tidak ditemukan untuk %s"},
-	"unknown_runtime":   {"Unknown runtime: %s (use python, php, node, go, deno, bun, java, rust)", "Runtime tidak dikenal: %s (gunakan python, php, node, go, deno, bun, java, rust)"},
+	"unknown_runtime":   {"Unknown runtime: %s", "Runtime tidak dikenal: %s"},
+	"valid_runtimes":    {"Valid runtimes: python, php, node, go, deno, bun, java, rust", "Runtime valid: python, php, node, go, deno, bun, java, rust"},
 
 	// Install
 	"already_downloaded": {"%s %s already downloaded.", "%s %s sudah diunduh."},
@@ -130,6 +131,10 @@ var i18n = map[string][2]string{
 	"doctor_no_goroot":    {"GOROOT not set — Go may not work correctly", "GOROOT tidak diatur — Go mungkin tidak berfungsi dengan benar"},
 	"doctor_all_good":     {"All checks passed!", "Semua pemeriksaan berhasil!"},
 	"doctor_issues_found": {"Issues found — see above.", "Masalah ditemukan — lihat di atas."},
+
+	// Interactive
+	"install_runtime":  {"Install Runtime", "Pasang Runtime"},
+	"version_for":      {"Version for %s (empty = default)", "Versi untuk %s (kosong = bawaan)"},
 
 	// Help text
 	"commands":           {"Commands", "Perintah"},

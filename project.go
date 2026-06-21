@@ -17,14 +17,36 @@ type framework struct {
 }
 
 var frameworks = []framework{
+	// PHP
 	{"Laravel", "laravel/laravel", "^11.0", "composer", ""},
 	{"CodeIgniter 4", "codeigniter4/app-project", "^4.0", "composer", ""},
 	{"Symfony", "symfony/skeleton", "^7.0", "composer", ""},
 	{"WordPress (Bedrock)", "roots/bedrock", "^2.0", "composer", ""},
+
+	// JavaScript / TypeScript
 	{"React (Vite)", "create-vite", "latest", "npm", "react"},
 	{"Next.js", "create-next-app", "latest", "npm", ""},
 	{"Vue (Vite)", "create-vite", "latest", "npm", "vue"},
 	{"AdonisJS", "create-adonisjs", "latest", "npm", ""},
+	{"Svelte (Vite)", "create-vite", "latest", "npm", "svelte"},
+	{"Nuxt", "create-nuxt-app", "latest", "npm", ""},
+	{"Solid (Vite)", "create-vite", "latest", "npm", "solid"},
+
+	// Python
+	{"Django", "django", "", "pip", ""},
+	{"Flask", "flask", "", "pip", ""},
+	{"FastAPI", "fastapi", "", "pip", ""},
+
+	// Go
+	{"Gin", "gin-gonic/gin", "", "go", ""},
+	{"Echo", "labstack/echo", "", "go", ""},
+	{"Fiber", "gofiber/fiber", "", "go", ""},
+
+	// Ruby
+	{"Ruby on Rails", "rails", "", "rails", ""},
+
+	// Java
+	{"Spring Boot", "spring-boot", "", "spring", ""},
 }
 
 func scaffoldProject(slug, name string) error {
@@ -51,6 +73,16 @@ func doScaffold(dir string, fw framework) error {
 	}
 
 	if _, err := exec.LookPath(exe); err != nil {
+		switch fw.typ {
+		case "pip":
+			return fmt.Errorf("'python' not found in PATH — install Python first")
+		case "go":
+			return fmt.Errorf("'go' not found in PATH — install Go first")
+		case "rails":
+			return fmt.Errorf("'rails' not found in PATH — run: gem install rails")
+		case "spring":
+			return fmt.Errorf("'mvn' or 'gradle' not found in PATH — install Maven/Gradle first")
+		}
 		return fmt.Errorf("'%s' not found in PATH — install it first", exe)
 	}
 
@@ -84,6 +116,37 @@ func scaffoldCmd(dir string, fw framework) (string, []string) {
 			return "npx", []string{"create-next-app@latest", dir}
 		case "create-adonisjs":
 			return "npm", []string{"init", "adonisjs@latest", dir}
+		case "create-nuxt-app":
+			return "npx", []string{"create-nuxt-app@latest", dir}
+		}
+	case "pip":
+		switch fw.pkg {
+		case "django":
+			return "python", []string{"-m", "django", "startproject", filepath.Base(dir)}
+		case "flask":
+			return "python", []string{"-m", "flask", "new", dir}
+		case "fastapi":
+			return "python", []string{"-m", "fastapi", "new", dir}
+		}
+	case "go":
+		switch fw.pkg {
+		case "gin-gonic/gin":
+			return "go", []string{"mod", "init", filepath.Base(dir)}
+		case "labstack/echo":
+			return "go", []string{"mod", "init", filepath.Base(dir)}
+		case "gofiber/fiber":
+			return "go", []string{"mod", "init", filepath.Base(dir)}
+		}
+	case "rails":
+		return "rails", []string{"new", dir}
+	case "spring":
+		_, mvnErr := exec.LookPath("mvn")
+		_, gradleErr := exec.LookPath("gradle")
+		if mvnErr == nil {
+			return "mvn", []string{"archetype:generate", "-DgroupId=com.example", "-DartifactId=" + filepath.Base(dir), "-DarchetypeArtifactId=maven-archetype-quickstart", "-DinteractiveMode=false"}
+		}
+		if gradleErr == nil {
+			return "gradle", []string{"init", "--project-name", filepath.Base(dir), "--type", "java-application"}
 		}
 	}
 	return "", nil

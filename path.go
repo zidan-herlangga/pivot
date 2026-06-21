@@ -22,18 +22,28 @@ func addToPath(dir string, key string) {
 		targets = []string{"node", "npm", "npx"}
 	case "go":
 		targets = []string{"go"}
-
-		// Set GOROOT for Go
 		if cfg.Go != "" {
 			goRoot := filepath.Join(svDir, "runtimes", "go", cfg.Go)
 			os.Setenv("GOROOT", goRoot)
 		}
+	case "deno":
+		targets = []string{"deno"}
+	case "bun":
+		targets = []string{"bun"}
+	case "java":
+		targets = []string{"java"}
+		// Set JAVA_HOME
+		if cfg.Java != "" {
+			javaHome := filepath.Join(svDir, "runtimes", "java", cfg.Java)
+			os.Setenv("JAVA_HOME", javaHome)
+		}
+	case "rust":
+		targets = []string{"rustc", "cargo"}
 	}
 
 	for _, name := range targets {
 		src := filepath.Join(dir, name+exeSuffix())
 		if _, err := os.Stat(src); err != nil {
-			// Try one level up (for Go: bin/go.exe, but dir might be version root)
 			alt := filepath.Join(dir, "bin", name+exeSuffix())
 			if _, err2 := os.Stat(alt); err2 != nil {
 				continue

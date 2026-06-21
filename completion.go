@@ -25,13 +25,14 @@ func printBashCompletion() {
   local prev="${COMP_WORDS[COMP_CWORD-1]}"
   local cmds="list use install run create profile init doctor upgrade clean update env hook completion shell pin"
   local runtimes="python php node go deno bun java rust"
+  local frameworks="laravel codeigniter symfony wordpress react nextjs vue adonisjs svelte nuxt solid django flask fastapi gin echo fiber rails spring"
 
   if [[ $COMP_CWORD -eq 1 ]]; then
     COMPREPLY=($(compgen -W "$cmds" -- "$cur"))
   elif [[ $COMP_CWORD -eq 2 ]]; then
     case "$prev" in
       use|install|run) COMPREPLY=($(compgen -W "$runtimes" -- "$cur")) ;;
-      create) COMPREPLY=($(compgen -W "laravel codeigniter symfony wordpress react nextjs vue adonisjs" -- "$cur")) ;;
+      create) COMPREPLY=($(compgen -W "$frameworks" -- "$cur")) ;;
       profile) COMPREPLY=($(compgen -W "save load list delete" -- "$cur")) ;;
       completion) COMPREPLY=($(compgen -W "bash zsh fish" -- "$cur")) ;;
     esac
@@ -54,7 +55,7 @@ _pivot() {
     "*::arg:->args"
   case $line[1] in
     use|install|run) _arguments "2:runtime:(python php node go deno bun java rust)" ;;
-    create) _arguments "2:framework:(laravel codeigniter symfony wordpress react nextjs vue adonisjs)" ;;
+    create) _arguments "2:framework:(laravel codeigniter symfony wordpress react nextjs vue adonisjs svelte nuxt solid django flask fastapi gin echo fiber rails spring)" ;;
     profile) _arguments "2:action:(save load list delete)" ;;
     completion) _arguments "2:shell:(bash zsh fish)" ;;
   esac
@@ -66,7 +67,7 @@ _pivot "$@"
 func printFishCompletion() {
 	fmt.Print(`complete -c pivot -f -a "list use install run create profile init doctor upgrade clean update env hook completion shell pin" -d "Commands"
 complete -c pivot -n "__fish_seen_subcommand_from use install run" -a "python php node go deno bun java rust" -d "Runtime"
-complete -c pivot -n "__fish_seen_subcommand_from create" -a "laravel codeigniter symfony wordpress react nextjs vue adonisjs" -d "Framework"
+complete -c pivot -n "__fish_seen_subcommand_from create" -a "laravel codeigniter symfony wordpress react nextjs vue adonisjs svelte nuxt solid django flask fastapi gin echo fiber rails spring" -d "Framework"
 complete -c pivot -n "__fish_seen_subcommand_from profile" -a "save load list delete" -d "Actions"
 complete -c pivot -n "__fish_seen_subcommand_from completion" -a "bash zsh fish" -d "Shell"
 `)

@@ -8,10 +8,33 @@ import (
 	"strings"
 )
 
+var doctorRuntimes = []string{"python", "php", "node", "go", "deno", "bun", "java", "rust"}
+
+func activeVersion(rt string) string {
+	switch rt {
+	case "python":
+		return cfg.Python
+	case "php":
+		return cfg.PHP
+	case "node":
+		return cfg.Node
+	case "go":
+		return cfg.Go
+	case "deno":
+		return cfg.Deno
+	case "bun":
+		return cfg.Bun
+	case "java":
+		return cfg.Java
+	case "rust":
+		return cfg.Rust
+	}
+	return ""
+}
+
 func cmdDoctor() {
 	ok := true
 
-	// Check .pivot/bin in PATH
 	home, _ := os.UserHomeDir()
 	binDir := filepath.Join(home, ".pivot", "bin")
 	curPath := os.Getenv("PATH")
@@ -22,28 +45,15 @@ func cmdDoctor() {
 		ok = false
 	}
 
-	// Check each runtime
-	for _, rt := range []string{"python", "php", "node", "go"} {
+	for _, rt := range doctorRuntimes {
 		versions := listVersions(rt)
-
-		var active string
-		switch rt {
-		case "python":
-			active = cfg.Python
-		case "php":
-			active = cfg.PHP
-		case "node":
-			active = cfg.Node
-		case "go":
-			active = cfg.Go
-		}
+		active := activeVersion(rt)
 
 		if len(versions) == 0 {
 			fmt.Printf("  \u26a0 %s\n", trFmt("doctor_no_versions", runtimeLabel(rt)))
 			continue
 		}
 
-		// Check for conflicts (multiple system versions)
 		sysCount := 0
 		for _, v := range versions {
 			if v.source == "System" {
@@ -59,13 +69,11 @@ func cmdDoctor() {
 			}
 		}
 
-		// Check if active version is still valid
 		if active != "" {
 			found := false
 			for _, v := range versions {
 				if v.version == active {
 					found = true
-					// Verify binary exists
 					bin := filepath.Join(binDir, rt+exeSuffix())
 					if _, err := os.Stat(bin); err != nil {
 						fmt.Printf("  \u2717 %s\n", trFmt("doctor_bin_missing", runtimeLabel(rt), bin))
@@ -85,11 +93,16 @@ func cmdDoctor() {
 		}
 	}
 
-	// Check Go GOROOT
 	if cfg.Go != "" {
 		goRoot := os.Getenv("GOROOT")
 		if goRoot == "" {
 			fmt.Printf("  \u26a0 %s\n", tr("doctor_no_goroot"))
+		}
+	}
+	if cfg.Java != "" {
+		javaHome := os.Getenv("JAVA_HOME")
+		if javaHome == "" {
+			fmt.Printf("  \u26a0 JAVA_HOME not set — Java may not work correctly\n")
 		}
 	}
 
@@ -107,7 +120,6 @@ func cmdDoctorFix() {
 
 	fixed := false
 
-	// Fix PATH
 	if !strings.Contains(curPath, binDir) {
 		if runtime.GOOS == "windows" {
 			curPath = binDir + ";" + curPath
@@ -119,25 +131,13 @@ func cmdDoctorFix() {
 		fixed = true
 	}
 
-	// Fix active versions — re-link binaries
 	for _, rt := range runtimesWithExtra() {
-		var active string
-		switch rt {
-		case "python":
-			active = cfg.Python
-		case "php":
-			active = cfg.PHP
-		case "node":
-			active = cfg.Node
-		case "go":
-			active = cfg.Go
-		}
+		active := activeVersion(rt)
 		if active == "" {
 			continue
 		}
 		bin := filepath.Join(binDir, rt+exeSuffix())
 		if _, err := os.Stat(bin); err != nil {
-			// Re-activate
 			versions := listVersions(rt)
 			v := findByPrefix(versions, active)
 			if v != nil {

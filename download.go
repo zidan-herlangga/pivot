@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -40,8 +41,38 @@ func downloadRuntime(key, version string) error {
 	if err := extractArchive(zipPath, dest); err != nil {
 		return fmt.Errorf(tr("extract_failed"), err)
 	}
+	// Java & Deno extract with top-level dir — flatten
+	fixExtractedLayout(key, dest)
 	os.Remove(zipPath)
 	return nil
+}
+
+func fixExtractedLayout(key, dest string) {
+	switch key {
+	case "java", "deno":
+		// If dest contains a single subdirectory, move contents up
+		entries, _ := os.ReadDir(dest)
+		if len(entries) == 1 && entries[0].IsDir() {
+			sub := filepath.Join(dest, entries[0].Name())
+			copyDirContents(sub, dest)
+			os.RemoveAll(sub)
+		}
+	}
+}
+
+func copyDirContents(src, dest string) {
+	entries, _ := os.ReadDir(src)
+	for _, e := range entries {
+		s := filepath.Join(src, e.Name())
+		d := filepath.Join(dest, e.Name())
+		if e.IsDir() {
+			os.MkdirAll(d, 0755)
+			copyDirContents(s, d)
+		} else {
+			data, _ := os.ReadFile(s)
+			os.WriteFile(d, data, 0755)
+		}
+	}
 }
 
 func defaultVersion(key string) string {
@@ -54,6 +85,12 @@ func defaultVersion(key string) string {
 		return "24.17.0"
 	case "go":
 		return "1.26.4"
+	case "java":
+		return "21.0.2"
+	case "deno":
+		return "2.2.11"
+	case "bun":
+		return "1.2.8"
 	}
 	return ""
 }
@@ -85,6 +122,31 @@ func downloadURL(key, version string) (string, string) {
 			return fmt.Sprintf("https://go.dev/dl/go%s.windows-amd64.zip", version), fmt.Sprintf("go%s.zip", version)
 		}
 		return fmt.Sprintf("https://go.dev/dl/go%s.%s-amd64.tar.gz", version, goos), fmt.Sprintf("go%s.tar.gz", version)
+	case "java":
+		osMap := map[string]string{"windows": "windows", "linux": "linux", "darwin": "mac"}
+		osStr := osMap[goos]
+		if osStr == "" {
+			return "", ""
+		}
+		ext := "tar.gz"
+		if goos == "windows" {
+			ext = "zip"
+		}
+		return fmt.Sprintf("https://api.adoptium.net/v3/binary/latest/%s/ga/%s/x64/jdk/hotspot/normal/eclipse?project=jdk", version, osStr), fmt.Sprintf("java-%s.%s", version, ext)
+	case "deno":
+		archMap := map[string]string{"windows": "x86_64-pc-windows-msvc", "linux": "x86_64-unknown-linux-gnu", "darwin": "x86_64-apple-darwin"}
+		arch := archMap[goos]
+		if arch == "" {
+			return "", ""
+		}
+		return fmt.Sprintf("https://github.com/denoland/deno/releases/download/v%s/deno-%s.zip", version, arch), fmt.Sprintf("deno-%s.zip", version)
+	case "bun":
+		osMap := map[string]string{"windows": "windows", "linux": "linux", "darwin": "darwin"}
+		osStr := osMap[goos]
+		if osStr == "" {
+			return "", ""
+		}
+		return fmt.Sprintf("https://github.com/oven-sh/bun/releases/download/bun-v%s/bun-%s-x64.zip", version, osStr), fmt.Sprintf("bun-%s.zip", version)
 	}
 	return "", ""
 }
@@ -100,7 +162,7 @@ func downloadFile(url, dest string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "pivot/1.0")
+	req.Header.Set("User-Agent", "pivot/2.0")
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
@@ -202,4 +264,24 @@ func untargz(src, dest string) error {
 		}
 	}
 	return nil
+}
+
+func scrapeVersion(url, pattern string) string {
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+
+	body := make([]byte, 512*1024)
+	n, _ := resp.Body.Read(body)
+	content := string(body[:n])
+
+	re := regexp.MustCompile(pattern)
+	m := re.FindStringSubmatch(content)
+	if len(m) > 1 {
+		return m[1]
+	}
+	return ""
 }
