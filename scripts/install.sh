@@ -36,7 +36,14 @@ BINARY="pivot-${OS}-${ARCH}"
 URL="https://github.com/${REPO}/releases/download/${LATEST}/${BINARY}.tar.gz"
 echo "  Downloading ${BINARY}..."
 mkdir -p "${BIN_DIR}"
-curl -fsSL "${URL}" | tar xz -C "${BIN_DIR}" 2>/dev/null || {
+curl -fsSL "${URL}" | tar xz -C "${BIN_DIR}" 2>/dev/null
+
+# Handle archive where binary has platform suffix (pivot-linux-amd64 -> pivot)
+if [ -f "${BIN_DIR}/${BINARY}" ] && [ ! -f "${BIN_DIR}/pivot" ]; then
+    mv "${BIN_DIR}/${BINARY}" "${BIN_DIR}/pivot"
+fi
+
+if [ ! -f "${BIN_DIR}/pivot" ]; then
     echo "  Pre-built binary not found. Building from source..."
     if command -v go >/dev/null 2>&1; then
         mkdir -p "${INSTALL_DIR}/src"
@@ -57,7 +64,7 @@ curl -fsSL "${URL}" | tar xz -C "${BIN_DIR}" 2>/dev/null || {
         echo "    https://github.com/${REPO}/releases"
         exit 1
     fi
-}
+fi
 
 chmod +x "${BIN_DIR}/pivot"
 
