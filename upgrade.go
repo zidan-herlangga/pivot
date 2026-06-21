@@ -12,19 +12,19 @@ import (
 )
 
 type ghRelease struct {
-	TagName string      `json:"tag_name"`
-	Assets  []ghAsset   `json:"assets"`
+	TagName string    `json:"tag_name"`
+	Assets  []ghAsset `json:"assets"`
 }
 
 type ghAsset struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
+	Name               string `json:"name"`
+	URL                string `json:"url"`
+	BrowserDownloadURL string `json:"browser_download_url"`
 }
 
 func cmdUpgrade() {
 	fmt.Println("  " + tr("checking_upgrades"))
 
-	// Fetch latest release
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Get("https://api.github.com/repos/zidan-herlangga/pivot/releases/latest")
 	if err != nil {
@@ -40,14 +40,12 @@ func cmdUpgrade() {
 		return
 	}
 
-	// Compare versions
 	latestVer := release.TagName
 	if compareVersions(version, latestVer) >= 0 {
 		fmt.Println("  " + trFmt("upgrade_latest", version))
 		return
 	}
 
-	// Find matching asset
 	arch := "amd64"
 	if runtime.GOARCH == "386" {
 		arch = "386"
@@ -68,7 +66,10 @@ func cmdUpgrade() {
 	var downloadURL string
 	for _, a := range release.Assets {
 		if a.Name == assetName {
-			downloadURL = a.URL
+			downloadURL = a.BrowserDownloadURL
+			if downloadURL == "" {
+				downloadURL = a.URL
+			}
 			break
 		}
 	}
@@ -79,7 +80,6 @@ func cmdUpgrade() {
 
 	fmt.Println("  " + trFmt("upgrade_downloading", latestVer))
 
-	// Download to temp
 	tmpDir, _ := os.MkdirTemp("", "pivot-upgrade")
 	defer os.RemoveAll(tmpDir)
 	archivePath := filepath.Join(tmpDir, assetName)
@@ -97,17 +97,14 @@ func cmdUpgrade() {
 	io.Copy(out, resp2.Body)
 	out.Close()
 
-	// Extract
 	if err := extractArchive(archivePath, tmpDir); err != nil {
 		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_extract_failed"))
 		return
 	}
 
-	// Find the binary
 	exeName := "pivot" + exeSuffix()
 	newBinary := filepath.Join(tmpDir, exeName)
 	if _, err := os.Stat(newBinary); err != nil {
-		// Try subdirectory
 		entries, _ := os.ReadDir(tmpDir)
 		for _, e := range entries {
 			if e.IsDir() {
@@ -120,7 +117,6 @@ func cmdUpgrade() {
 		}
 	}
 
-	// Replace current binary
 	self, err := os.Executable()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed"))
@@ -131,6 +127,17 @@ func cmdUpgrade() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed"))
 		return
+	}
+
+	// On Windows, rename the running exe first, then write new one
+	if runtime.GOOS == "windows" {
+		old := self + ".old"
+		os.Remove(old)
+		if err := os.Rename(self, old); err != nil {
+			fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed"))
+			return
+		}
+		defer os.Remove(old)
 	}
 
 	if err := os.WriteFile(self, data, 0755); err != nil {
