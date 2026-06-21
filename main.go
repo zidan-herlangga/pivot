@@ -41,7 +41,19 @@ func main() {
 	case "run":
 		cmdRun(args[1:])
 	case "doctor":
-		cmdDoctor()
+		if len(args) > 1 && args[1] == "--fix" {
+			cmdDoctorFix()
+		} else {
+			cmdDoctor()
+		}
+	case "shell":
+		cmdShell(args[1:])
+	case "hook":
+		cmdHook()
+	case "completion":
+		cmdCompletion(args[1:])
+	case "pin":
+		cmdInit()
 	case "upgrade":
 		cmdUpgrade()
 	case "clean":
@@ -61,7 +73,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  profile <op> <name> %s\n", tr("manage_profiles"))
 		fmt.Fprintf(os.Stderr, "  init              %s\n", tr("create_pivotrc"))
 		fmt.Fprintf(os.Stderr, "  run <rt> <ver> <cmd> %s\n", tr("run_with_version"))
-		fmt.Fprintf(os.Stderr, "  doctor            %s\n", tr("diagnose_system"))
+		fmt.Fprintf(os.Stderr, "  doctor [--fix]    %s\n", tr("diagnose_system"))
+		fmt.Fprintf(os.Stderr, "  shell <rt> <ver>  %s\n", tr("shell_version"))
+		fmt.Fprintf(os.Stderr, "  hook              %s\n", tr("hook_info"))
+		fmt.Fprintf(os.Stderr, "  completion <sh>   %s\n", tr("completion_info"))
+		fmt.Fprintf(os.Stderr, "  pin               %s\n", tr("create_pivotrc"))
 		fmt.Fprintf(os.Stderr, "  upgrade           %s\n", tr("upgrade_self"))
 		fmt.Fprintf(os.Stderr, "  clean             %s\n", tr("clean_runtimes"))
 		fmt.Fprintf(os.Stderr, "  update            %s\n", tr("check_new_versions"))
@@ -138,13 +154,22 @@ func parseEnvLines(content string) []envLine {
 	return lines
 }
 
+func allRuntimes() []string {
+	return []string{"python", "php", "node", "go", "deno", "bun", "java", "rust"}
+}
+
 func runInteractive() {
+	all := allRuntimes()
 	for {
 		items := []string{
 			trFmt("python_label", orDash(activePython())),
 			trFmt("php_label", orDash(activePHP())),
 			trFmt("nodejs_label", orDash(activeNode())),
 			trFmt("go_label", orDash(activeGo())),
+			trFmt("deno_label", orDash(cfg.Deno)),
+			trFmt("bun_label", orDash(cfg.Bun)),
+			trFmt("java_label", orDash(cfg.Java)),
+			trFmt("rust_label", orDash(cfg.Rust)),
 			tr("create_project"),
 			tr("profiles"),
 			tr("check_updates"),
@@ -154,24 +179,28 @@ func runInteractive() {
 		if sel < 0 {
 			break
 		}
-		switch sel {
-		case 0:
-			selectVersion("python")
-		case 1:
-			selectVersion("php")
-		case 2:
-			selectVersion("node")
-		case 3:
-			selectVersion("go")
-		case 4:
-			createProject()
-		case 5:
-			profileMenu()
-		case 6:
-			checkUpdates(svDir)
-			pause()
-		case 7:
-			return
+		if sel < 4 {
+			selectVersion(all[sel])
+		} else if sel < 8 {
+			if v := detectExtra(all[sel]); v != nil {
+				activateVersion(all[sel], *v)
+				pause()
+			} else {
+				fmt.Println("\n  " + trFmt("doctor_no_versions", runtimeLabel(all[sel])))
+				pause()
+			}
+		} else {
+			switch sel {
+			case 8:
+				createProject()
+			case 9:
+				profileMenu()
+			case 10:
+				checkUpdates(svDir)
+				pause()
+			case 11:
+				return
+			}
 		}
 	}
 }
@@ -184,7 +213,7 @@ func orDash(s string) string {
 }
 
 func cmdList() {
-	for _, r := range []string{"python", "php", "node", "go"} {
+	for _, r := range runtimesWithExtra() {
 		fmt.Printf("\n  %s:\n", runtimeLabel(r))
 		for _, v := range listVersions(r) {
 			fmt.Printf("    %s  [%s] %s\n", v.version, v.source, v.path)
@@ -192,9 +221,22 @@ func cmdList() {
 	}
 }
 
+func isValidRuntime(rt string) bool {
+	for _, r := range runtimesWithExtra() {
+		if r == rt {
+			return true
+		}
+	}
+	return false
+}
+
 func cmdUse(args []string) {
 	if len(args) < 2 {
 		fmt.Fprintln(os.Stderr, tr("usage_use"))
+		os.Exit(1)
+	}
+	if !isValidRuntime(args[0]) {
+		fmt.Fprintf(os.Stderr, tr("unknown_runtime"), args[0])
 		os.Exit(1)
 	}
 	vs := listVersions(args[0])

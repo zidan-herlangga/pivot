@@ -59,22 +59,30 @@ func printUpdateVersions(versions map[string]string) {
 }
 
 func fetchLatestVersions() map[string]string {
-	result := map[string]string{}
+	type result struct {
+		key string
+		val string
+	}
+	ch := make(chan result, 4)
 
-	if v := scrapeVersion("https://www.python.org/downloads/", `Python\s+(\d+\.\d+\.\d+)`); v != "" {
-		result["python"] = v
-	}
-	if v := scrapeVersion("https://windows.php.net/download/", `php-(\d+\.\d+\.\d+)-nts`); v != "" {
-		result["php"] = v
-	}
-	if v := scrapeVersion("https://nodejs.org/dist/latest/", `node-v(\d+\.\d+\.\d+)`); v != "" {
-		result["node"] = v
-	}
-	if v := scrapeVersion("https://go.dev/dl/", `go(\d+\.\d+\.\d+)\.windows`); v != "" {
-		result["go"] = v
+	fetch := func(url, pattern, key string) {
+		v := scrapeVersion(url, pattern)
+		ch <- result{key, v}
 	}
 
-	return result
+	go fetch("https://www.python.org/downloads/", `Python\s+(\d+\.\d+\.\d+)`, "python")
+	go fetch("https://windows.php.net/download/", `php-(\d+\.\d+\.\d+)-nts`, "php")
+	go fetch("https://nodejs.org/dist/latest/", `node-v(\d+\.\d+\.\d+)`, "node")
+	go fetch("https://go.dev/dl/", `go(\d+\.\d+\.\d+)\.windows`, "go")
+
+	m := make(map[string]string, 4)
+	for i := 0; i < 4; i++ {
+		r := <-ch
+		if r.val != "" {
+			m[r.key] = r.val
+		}
+	}
+	return m
 }
 
 func scrapeVersion(url, pattern string) string {

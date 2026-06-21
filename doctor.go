@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -96,5 +97,58 @@ func cmdDoctor() {
 		fmt.Println("\n  " + tr("doctor_all_good"))
 	} else {
 		fmt.Println("\n  " + tr("doctor_issues_found"))
+	}
+}
+
+func cmdDoctorFix() {
+	home, _ := os.UserHomeDir()
+	binDir := filepath.Join(home, ".pivot", "bin")
+	curPath := os.Getenv("PATH")
+
+	fixed := false
+
+	// Fix PATH
+	if !strings.Contains(curPath, binDir) {
+		if runtime.GOOS == "windows" {
+			curPath = binDir + ";" + curPath
+		} else {
+			curPath = binDir + ":" + curPath
+		}
+		os.Setenv("PATH", curPath)
+		fmt.Println("  " + trFmt("doctor_fixed_path", binDir))
+		fixed = true
+	}
+
+	// Fix active versions — re-link binaries
+	for _, rt := range runtimesWithExtra() {
+		var active string
+		switch rt {
+		case "python":
+			active = cfg.Python
+		case "php":
+			active = cfg.PHP
+		case "node":
+			active = cfg.Node
+		case "go":
+			active = cfg.Go
+		}
+		if active == "" {
+			continue
+		}
+		bin := filepath.Join(binDir, rt+exeSuffix())
+		if _, err := os.Stat(bin); err != nil {
+			// Re-activate
+			versions := listVersions(rt)
+			v := findByPrefix(versions, active)
+			if v != nil {
+				activateVersion(rt, *v)
+				fmt.Println("  " + trFmt("doctor_fixed_bin", runtimeLabel(rt)))
+				fixed = true
+			}
+		}
+	}
+
+	if !fixed {
+		fmt.Println("\n  " + tr("doctor_all_good"))
 	}
 }

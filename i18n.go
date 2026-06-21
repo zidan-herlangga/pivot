@@ -61,7 +61,7 @@ var i18n = map[string][2]string{
 	"usage_create":      {"Usage: pivot create <framework> <name>", "Penggunaan: pivot create <framework> <nama>"},
 	"usage_profile":     {"Usage: pivot profile save|load|list|delete <name>", "Penggunaan: pivot profile simpan|muat|daftar|hapus <nama>"},
 	"version_not_found": {"Version '%s' not found for %s", "Versi '%s' tidak ditemukan untuk %s"},
-	"unknown_runtime":   {"Unknown runtime: %s (use python, php, node, go)", "Runtime tidak dikenal: %s (gunakan python, php, node, go)"},
+	"unknown_runtime":   {"Unknown runtime: %s (use python, php, node, go, deno, bun, java, rust)", "Runtime tidak dikenal: %s (gunakan python, php, node, go, deno, bun, java, rust)"},
 
 	// Install
 	"already_downloaded": {"%s %s already downloaded.", "%s %s sudah diunduh."},
@@ -158,4 +158,25 @@ var i18n = map[string][2]string{
 	"nothing_to_clean":   {"Nothing to clean.", "Tidak ada yang perlu dibersihkan."},
 	"cleaned_versions":   {"Removed %d version(s).", "%d versi dihapus."},
 	"checking_upgrades":  {"Checking for upgrades...", "Memeriksa pembaruan..."},
+
+	// Shell
+	"usage_shell":        {"Usage: pivot shell <runtime> <version>", "Penggunaan: pivot shell <runtime> <version>"},
+	"shell_version":      {"Spawn a shell with specific version active", "Buka shell dengan versi tertentu"},
+
+	// Hook
+	"hook_info":          {"Print shell hook for auto-apply .pivotrc", "Cetak hook shell untuk auto-apply .pivotrc"},
+
+	// Completion
+	"usage_completion":   {"Usage: pivot completion bash|zsh|fish", "Penggunaan: pivot completion bash|zsh|fish"},
+	"completion_info":    {"Generate shell completion script", "Hasilkan skrip completion shell"},
+
+	// Doctor --fix
+	"doctor_fixed_path":  {"Fixed: added %s to PATH", "Diperbaiki: %s ditambahkan ke PATH"},
+	"doctor_fixed_bin":   {"Fixed: re-linked %s binary", "Diperbaiki: binary %s ditautkan ulang"},
+
+	// Extras
+	"deno_label":         {"Deno    [%s]", "Deno    [%s]"},
+	"bun_label":          {"Bun     [%s]", "Bun     [%s]"},
+	"java_label":         {"Java    [%s]", "Java    [%s]"},
+	"rust_label":         {"Rust    [%s]", "Rust    [%s]"},
 }

@@ -31,6 +31,10 @@ type configData struct {
 	PHP    string `json:"php"`
 	Node   string `json:"node"`
 	Go     string `json:"go"`
+	Deno   string `json:"deno,omitempty"`
+	Bun    string `json:"bun,omitempty"`
+	Java   string `json:"java,omitempty"`
+	Rust   string `json:"rust,omitempty"`
 }
 
 var svDir string
@@ -55,6 +59,10 @@ func activePython() string { return cfg.Python }
 func activePHP() string    { return cfg.PHP }
 func activeNode() string   { return cfg.Node }
 func activeGo() string     { return cfg.Go }
+func activeDeno() string   { return cfg.Deno }
+func activeBun() string    { return cfg.Bun }
+func activeJava() string   { return cfg.Java }
+func activeRust() string   { return cfg.Rust }
 
 func runtimeLabel(key string) string {
 	switch key {
@@ -66,12 +74,35 @@ func runtimeLabel(key string) string {
 		return "Node.js"
 	case "go":
 		return "Go"
+	case "deno":
+		return "Deno"
+	case "bun":
+		return "Bun"
+	case "java":
+		return "Java"
+	case "rust":
+		return "Rust"
 	}
 	return key
 }
 
 // ---- Detection ----
 func listVersions(key string) []versionInfo {
+	isExtra := false
+	for _, e := range extraRuntimes {
+		if key == e {
+			isExtra = true
+			break
+		}
+	}
+	if isExtra {
+		versions := listExtraVersions(key)
+		sort.Slice(versions, func(i, j int) bool {
+			return compareVersions(versions[i].version, versions[j].version) > 0
+		})
+		return versions
+	}
+
 	dir := filepath.Join(svDir, "runtimes", key)
 	versions := detectPortable(dir, key, exeName(key))
 	if sys := detectSystem(key); sys != nil {
@@ -84,11 +115,19 @@ func listVersions(key string) []versionInfo {
 }
 
 func exeName(key string) string {
-	name := key
-	if key == "node" {
+	switch key {
+	case "node":
 		return "node" + exeSuffix()
+	case "deno":
+		return "deno" + exeSuffix()
+	case "bun":
+		return "bun" + exeSuffix()
+	case "java":
+		return "java" + exeSuffix()
+	case "rust":
+		return "rustc" + exeSuffix()
 	}
-	return name + exeSuffix()
+	return key + exeSuffix()
 }
 
 func detectPortable(dir, key, exe string) []versionInfo {
@@ -160,6 +199,14 @@ func getExeVersion(exePath, key string) string {
 		args = []string{"--version"}
 	case "go":
 		args = []string{"version"}
+	case "deno":
+		args = []string{"--version"}
+	case "bun":
+		args = []string{"--version"}
+	case "java":
+		args = []string{"--version"}
+	case "rust":
+		args = []string{"--version"}
 	}
 	cmd := exec.Command(exePath, args...)
 	out, _ := cmd.Output()
@@ -177,6 +224,14 @@ func extractVersion(output, key string) string {
 		m = nodeVer.FindStringSubmatch(output)
 	case "go":
 		m = goVer.FindStringSubmatch(output)
+	case "deno":
+		m = denoVer.FindStringSubmatch(output)
+	case "bun":
+		m = bunVer.FindStringSubmatch(output)
+	case "java":
+		m = javaVer.FindStringSubmatch(output)
+	case "rust":
+		m = rustVer.FindStringSubmatch(output)
 	}
 	if len(m) > 1 {
 		return m[1]
