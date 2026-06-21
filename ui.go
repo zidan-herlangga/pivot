@@ -22,13 +22,25 @@ func menu(title string, items []string) int {
 		if pad < 0 {
 			pad = 0
 		}
-		fmt.Print("  " + strings.Repeat(" ", pad) + "  " + title + strings.Repeat(" ", w-pad-len(title)-2) + "  \n")
+		rpad := w - pad - len(title) - 2
+		if rpad < 0 {
+			rpad = 0
+		}
+		fmt.Print("  " + strings.Repeat(" ", pad) + "  " + title + strings.Repeat(" ", rpad) + "  \n")
 		fmt.Print("  " + strings.Repeat("=", w) + "\n")
 		for i, item := range items {
 			if i == sel {
-				fmt.Print("\033[7m  > " + item + strings.Repeat(" ", w-len(item)-4) + "\033[0m\n")
+				n := w - len(item) - 4
+				if n < 0 {
+					n = 0
+				}
+				fmt.Print("\033[7m  > " + item + strings.Repeat(" ", n) + "\033[0m\n")
 			} else {
-				fmt.Print("    " + item + strings.Repeat(" ", w-len(item)-5) + "\n")
+				n := w - len(item) - 5
+				if n < 0 {
+					n = 0
+				}
+				fmt.Print("    " + item + strings.Repeat(" ", n) + "\n")
 			}
 		}
 		fmt.Print("  " + strings.Repeat("=", w) + "\n")
