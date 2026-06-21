@@ -22,6 +22,9 @@ func downloadRuntime(key, version string) error {
 	}
 	dir := filepath.Join(svDir, "runtimes", key)
 	url, zipName := downloadURL(key, version)
+	if url == "" {
+		return fmt.Errorf(tr("no_download_for_platform"), runtimeLabel(key), runtime.GOOS)
+	}
 	dest := filepath.Join(dir, version)
 	if _, err := os.Stat(dest); err == nil {
 		fmt.Println("  " + trFmt("already_downloaded", runtimeLabel(key), version))
@@ -59,8 +62,14 @@ func downloadURL(key, version string) (string, string) {
 	goos := runtime.GOOS
 	switch key {
 	case "python":
-		return fmt.Sprintf("https://www.python.org/ftp/python/%s/python-%s-embed-amd64.zip", version, version), fmt.Sprintf("python-%s.zip", version)
+		if goos == "windows" {
+			return fmt.Sprintf("https://www.python.org/ftp/python/%s/python-%s-embed-amd64.zip", version, version), fmt.Sprintf("python-%s.zip", version)
+		}
+		return fmt.Sprintf("https://www.python.org/ftp/python/%s/Python-%s.tgz", version, version), fmt.Sprintf("Python-%s.tgz", version)
 	case "php":
+		if goos != "windows" {
+			return "", ""
+		}
 		vs := "vs16"
 		if compareVersions(version, "8.5.0") >= 0 {
 			vs = "vs17"

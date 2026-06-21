@@ -245,10 +245,52 @@ func selectVersion(key string) {
 
 func findByPrefix(versions []versionInfo, prefix string) *versionInfo {
 	prefix = strings.ToLower(prefix)
+
+	switch prefix {
+	case "latest":
+		if len(versions) > 0 {
+			return &versions[0]
+		}
+		return nil
+	case "system":
+		for _, v := range versions {
+			if v.source == "System" {
+				return &v
+			}
+		}
+		return nil
+	case "lts":
+		return findLTS(versions)
+	default:
+		for _, v := range versions {
+			if strings.ToLower(v.version) == prefix {
+				return &v
+			}
+		}
+		for _, v := range versions {
+			if strings.HasPrefix(strings.ToLower(v.version), prefix) {
+				return &v
+			}
+		}
+	}
+
+	return nil
+}
+
+func findLTS(versions []versionInfo) *versionInfo {
 	for _, v := range versions {
-		if strings.HasPrefix(strings.ToLower(v.version), prefix) {
+		parts := parseVersion(v.version)
+		if len(parts) < 1 {
+			continue
+		}
+		// Node.js LTS is typically even major numbers
+		// Python 3.x is all LTS-like
+		if parts[0]%2 == 0 {
 			return &v
 		}
+	}
+	if len(versions) > 0 {
+		return &versions[0]
 	}
 	return nil
 }

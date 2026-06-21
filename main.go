@@ -38,6 +38,14 @@ func main() {
 		cmdProfile(args[1:])
 	case "init":
 		cmdInit()
+	case "run":
+		cmdRun(args[1:])
+	case "doctor":
+		cmdDoctor()
+	case "upgrade":
+		cmdUpgrade()
+	case "clean":
+		cmdClean()
 	case "update":
 		checkUpdates(svDir)
 	case "env":
@@ -52,6 +60,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  create <fw> <name> %s\n", tr("create_framework"))
 		fmt.Fprintf(os.Stderr, "  profile <op> <name> %s\n", tr("manage_profiles"))
 		fmt.Fprintf(os.Stderr, "  init              %s\n", tr("create_pivotrc"))
+		fmt.Fprintf(os.Stderr, "  run <rt> <ver> <cmd> %s\n", tr("run_with_version"))
+		fmt.Fprintf(os.Stderr, "  doctor            %s\n", tr("diagnose_system"))
+		fmt.Fprintf(os.Stderr, "  upgrade           %s\n", tr("upgrade_self"))
+		fmt.Fprintf(os.Stderr, "  clean             %s\n", tr("clean_runtimes"))
 		fmt.Fprintf(os.Stderr, "  update            %s\n", tr("check_new_versions"))
 		fmt.Fprintf(os.Stderr, "  env               %s\n", tr("print_path_setup"))
 		os.Exit(1)

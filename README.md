@@ -5,16 +5,19 @@
 ## Install
 
 **Linux / macOS**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/zidan-herlangga/pivot/main/scripts/install.sh | sh
 ```
 
 **Windows (PowerShell)**
+
 ```powershell
 iwr -Uri https://raw.githubusercontent.com/zidan-herlangga/pivot/main/scripts/install.ps1 | iex
 ```
 
 **Manual (Go required)**
+
 ```bash
 go install github.com/zidan-herlangga/pivot@latest
 ```
@@ -33,15 +36,21 @@ Add `~/.pivot/bin` to your PATH, then run `pivot use <runtime> <version>` to swi
 
 ## Commands
 
-| Command | Description |
-|---|---|
-| `pivot` | Interactive TUI menu |
-| `pivot list` | Show installed versions |
-| `pivot use <rt> <ver>` | Activate a version |
-| `pivot install <rt> [ver]` | Download a portable runtime |
-| `pivot update` | Check latest upstream versions |
-| `pivot init` | Create `.pivotrc` in current dir |
-| `pivot env` | Print PATH setup for shell config |
+| Command                    | Description                       |
+| -------------------------- | --------------------------------- |
+| `pivot`                    | Interactive TUI menu              |
+| `pivot list`               | Show installed versions           |
+| `pivot use <rt> <ver>`     | Activate a version                |
+| `pivot install <rt> [ver]` | Download a portable runtime       |
+| `pivot run <rt> <ver> <cmd>` | Run a command with a version    |
+| `pivot doctor`             | Diagnose system and PATH          |
+| `pivot upgrade`            | Upgrade pivot to latest version   |
+| `pivot clean`              | Remove unused runtime versions    |
+| `pivot update`             | Check latest upstream versions    |
+| `pivot init`               | Create `.pivotrc` in current dir  |
+| `pivot env`                | Print PATH setup for shell config |
+
+Version aliases: `latest`, `system`, `lts` (e.g. `pivot use node lts`).
 
 ### Project Scaffolding
 
@@ -97,6 +106,24 @@ go mod tidy
 go build -o pivot .
 ```
 
-## License
+## MIT License
 
-MIT
+Copyright (c) 2026 zidan-herlangga
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -70,6 +70,7 @@ var i18n = map[string][2]string{
 	"download_failed":    {"download failed: %s", "unduh gagal: %s"},
 	"extract_failed":     {"extract failed: %s", "ekstrak gagal: %s"},
 	"install_failed":     {"Install failed: %v", "Instalasi gagal: %v"},
+	"no_download_for_platform": {"%s download is not available for %s", "Unduhan %s tidak tersedia untuk %s"},
 
 	// Project creation
 	"project_created":     {"Project '%s' created!", "Project '%s' dibuat!"},
@@ -115,6 +116,21 @@ var i18n = map[string][2]string{
 	"nodejs_label":       {"Node.js [%s]", "Node.js [%s]"},
 	"go_label":           {"Go [%s]", "Go [%s]"},
 
+	// Run
+	"usage_run":          {"Usage: pivot run <runtime> <version> <command> [args...]", "Penggunaan: pivot run <runtime> <version> <command> [argumen...]"},
+
+	// Doctor
+	"doctor_path_ok":      {"%s is in PATH", "%s ada di PATH"},
+	"doctor_path_missing": {"%s is NOT in PATH — add it with: pivot env", "%s TIDAK ada di PATH — tambahkan dengan: pivot env"},
+	"doctor_no_versions":  {"No %s versions found", "Tidak ada versi %s ditemukan"},
+	"doctor_conflict":     {"Multiple system %s detected —可能會导致冲突", "Multiple system %s terdeteksi — mungkin konflik"},
+	"doctor_bin_missing":  {"%s binary not found at %s — re-run: pivot use", "Binary %s tidak ditemukan di %s — jalankan ulang: pivot use"},
+	"doctor_active_missing": {"%s %s is active but version not found", "%s %s aktif tetapi versi tidak ditemukan"},
+	"doctor_not_active":   {"No active %s version — run: pivot use", "Tidak ada versi %s aktif — jalankan: pivot use"},
+	"doctor_no_goroot":    {"GOROOT not set — Go may not work correctly", "GOROOT tidak diatur — Go mungkin tidak berfungsi dengan benar"},
+	"doctor_all_good":     {"All checks passed!", "Semua pemeriksaan berhasil!"},
+	"doctor_issues_found": {"Issues found — see above.", "Masalah ditemukan — lihat di atas."},
+
 	// Help text
 	"commands":           {"Commands", "Perintah"},
 	"show_installed":     {"Show installed versions", "Tampilkan versi terpasang"},
@@ -125,4 +141,21 @@ var i18n = map[string][2]string{
 	"create_pivotrc":     {"Create .pivotrc in current dir", "Buat .pivotrc di direktori ini"},
 	"check_new_versions": {"Check for newer versions", "Periksa versi terbaru"},
 	"print_path_setup":   {"Print PATH setup for shell", "Tampilkan pengaturan PATH untuk shell"},
+	"run_with_version":   {"Run a command with a specific version", "Jalankan perintah dengan versi tertentu"},
+	"diagnose_system":    {"Diagnose system and PATH issues", "Diagnosa sistem dan masalah PATH"},
+	"upgrade_self":       {"Upgrade pivot to latest version", "Perbarui pivot ke versi terbaru"},
+	"upgrade_fetch_failed": {"Failed to fetch latest version", "Gagal mengambil versi terbaru"},
+	"upgrade_latest":     {"Already at latest version (%s)", "Sudah versi terbaru (%s)"},
+	"upgrade_unsupported": {"Unsupported platform", "Platform tidak didukung"},
+	"upgrade_no_asset":   {"No matching binary found for this platform", "Binary tidak ditemukan untuk platform ini"},
+	"upgrade_downloading": {"Downloading %s ...", "Mengunduh %s ..."},
+	"upgrade_download_failed": {"Download failed", "Unduh gagal"},
+	"upgrade_extract_failed": {"Extract failed", "Ekstrak gagal"},
+	"upgrade_failed":     {"Upgrade failed", "Pembaruan gagal"},
+	"upgrade_done":       {"Upgraded to %s!", "Diperbarui ke %s!"},
+	"clean_runtimes":     {"Remove unused runtime versions", "Hapus versi runtime yang tidak dipakai"},
+	"removed":            {"Removed", "Dihapus"},
+	"nothing_to_clean":   {"Nothing to clean.", "Tidak ada yang perlu dibersihkan."},
+	"cleaned_versions":   {"Removed %d version(s).", "%d versi dihapus."},
+	"checking_upgrades":  {"Checking for upgrades...", "Memeriksa pembaruan..."},
 }
