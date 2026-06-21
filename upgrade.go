@@ -157,6 +157,12 @@ func cmdUpgrade() {
 			return
 		}
 		defer os.Remove(old)
+	} else {
+		// Remove first to avoid ETXTBUSY (text file busy)
+		if err := os.Remove(self); err != nil {
+			fmt.Fprintln(os.Stderr, "  "+tr("upgrade_failed")+": remove: "+err.Error())
+			return
+		}
 	}
 
 	if err := os.WriteFile(self, data, 0755); err != nil {

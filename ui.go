@@ -44,7 +44,7 @@ func menu(title string, items []string) int {
 			}
 		}
 		fmt.Print("  " + strings.Repeat("=", w) + "\n")
-		fmt.Print("    ^/v  Enter  Esc\n")
+		fmt.Print("    ↓/↑  Enter  Esc\n")
 
 		key := readKey()
 		switch key {
